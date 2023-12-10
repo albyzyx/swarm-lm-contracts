@@ -1,22 +1,19 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  const initialSupply = ethers.parseEther("1000000"); // Example supply: 1,000,000 tokens
+  console.log(initialSupply);
+  const swarmLM = await ethers.deployContract("SwarmLM", [initialSupply]);
 
-  const lockedAmount = ethers.parseEther("0.001");
+  await swarmLM.waitForDeployment();
+  console.log("SwarmLM deployed to:", swarmLM.target);
 
-  const lock = await ethers.deployContract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
+  const bondingManager = await ethers.deployContract("BondingManager", [
+    swarmLM.target,
+  ]);
 
-  await lock.waitForDeployment();
-
-  console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.target}`
-  );
+  await bondingManager.waitForDeployment();
+  console.log("BondingManager deployed to:", bondingManager.target);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
